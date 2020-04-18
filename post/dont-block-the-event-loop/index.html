@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Athiti&family=Space+Mono&display=swap" rel="stylesheet">
+    <link href="https://emoji-css.afeld.me/emoji.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/style.css"> 
+    <link rel="shortcut icon" href="/favicon.ico">
+
+    <!-- script -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <title>Don't Block The Event Loop!</title>
+</head>
+<body>
+    <header>
+        <p class="username">
+            <a href="/" class="btn btn-xs" role="button">Dan Nguyen</a>
+        </p>
+    </header>
+    <main>
+        <article>
+            <header>
+                <h1>Don't Block the Event Loop!</h1>
+                <span class="date">30 Mar 2020</span>
+                <hr>
+            </header>
+            <p>
+                Cùng thực thi đoạn code dưới đây trên môi trường browser và xem điều gì xảy ra:
+            </p>
+            <pre><span class="b">window</span>.<span class="g">onscroll</span> <span class="r">=</span> <span class="b">function</span>() {<span class="r">cb1</span>()};
+<span class="b">function </span><span class="r">cb1</span>() {
+    <span class="b">for</span> (<span class="r">let</span> i <span class="r">=</span> 0; i  <span class="r">&lt;</span> 100000000; i<span class="r">++</span>) {
+        <span class="b">console</span>.<span class="g">log</span>(i);
+    }
+}        </pre>
+            <p>
+                Khi ta scroll trình duyệt thì chương trình gọi và thực thi hàm <code>cb1</code>,
+                và chạy 100tr lần vòng <code>for</code>. Giả sử vẫn còn các hàm
+                phía sau thì tụi nó phải đợi vòng <code>for</code> chạy hết, khi này
+                chương trình sẽ bị block và browser đứng hình ngay khi scroll.
+            </p>
+            <p>
+                Cũng với ví dụ trên, nhưng ta sử dụng thêm <code>setTimeout()</code>:
+            </p>
+            <pre><span class="b">window</span>.<span class="g">onscroll</span> <span class="r">=</span> <span class="g">function</span>() {
+    <span class="b">setTimeout</span>(<span class="r">cb1</span>(), <span class="o">0</span>);
+};
+<span class="b">function </span><span class="r">cb1</span>() {
+    <span class="b">for</span> (<span class="r">let</span> i <span class="r">=</span> 0; i  <span class="r">&lt;</span> 100000000; i<span class="r">++</span>) {
+        <span class="b">console</span>.<span class="g">log</span>(i);
+    }
+}         </pre>
+            <p>
+                Cũng vẫn là trên browser, khi ta scroll liên tục, browser sẽ không đứng hình ngay
+                mà vẫn bình thường. Nhưng khi dừng scroll, câu chuyện lại trở về ví dụ ở trên, trình duyệt lại toang.
+            </p>
+            <p>
+            Dễ hiểu, trạng thái ban đầu, Call Stack đang trống.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.18.03 PM.png" alt="">
+            <p>
+                <code>setTimeout(cb1(), 0)</code> được thêm vào Call Stack.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.24.15 PM.png" alt="">
+            <p>
+                <code>setTimeout(cb1(), 0)</code> được thực thi. Trình duyệt
+                 tạo một <code>timer()</code> - vốn là một phần của Web APIs. Nó sẽ thực hiện phần đếm ngược cho bạn. Trong
+                 trường hợp này thời gian đếm = 0.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.31.36 PM.png" alt="">
+            <p>
+                <code>setTimeout(cb1(), 0)</code> được thực thi xong và bị xoá
+                khỏi Call Stack.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.33.27 PM.png" alt="">
+            <p>
+                <code>timer()</code> đẩy <code>cb1()</code> callback vào trong Callback Queue.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.36.11 PM.png" alt="">
+            <p>
+                Khi ta vẫn scroll browser thì tiếp tục <code>setTimeout(cb1(), 0)</code> được thêm
+                vào Call Stack.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.36.50 PM.png" alt="">
+            <p>
+                <code>setTimeout(cb1(), 0)</code> được thực thi. Tiếp tục
+                <code>timer()</code> được tạo.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.37.51 PM.png" alt="">
+            <p>
+                <code>setTimeout(cb1(), 0)</code> bị xoá khỏi Call Stack.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.38.27 PM.png" alt="">
+            <p>
+                <code>timer()</code> đẩy <code>cb1()</code> xuống Callback Queue và <code>setTimeout(cb1(), 0)</code>
+            lại tiếp tục được thêm vào Call Stack.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.42.41 PM.png" alt="">
+            <p>
+                Ta vẫn scroll thì nó vẫn sẽ chạy như vậy, Callback Queue lúc này chứa rất nhiều hàm <code>cb1()</code>.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.44.55 PM.png" alt="">
+            <p>
+                Trường hợp dừng scroll, lúc này <code>setTimeout(cb1(), 0)</code>
+                sẽ hông đẩy vào Call Stack nữa, đồng nghĩa là Call Stack lúc này đang trống. Khi này, 
+                thằng tên Event Loop sẽ nhảy vào và gắp từng thằng có trong Callback (các hàm <code>cb1()</code>) Queue đưa lên Call Stack.            
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.46.02 PM.png" alt="">
+            <p>
+                Hàm <code>cb1()</code> được đẩy lên Call Stack và vòng <code>for</code> được thực thi.
+            </p>
+            <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.47.55 PM.png" alt="">
+            <p>
+                Và chương trình cũng đứng hình từ đây! 
+            </p>
+            <p>
+                <h2>Tags: </h2> &nbsp;
+                <span><a href="/tags/javascript">#javascript</a></span> &nbsp;
+                <span><a href="/tags/nodejs">#nodejs</a></span>
+            </p>
+            <p>
+                Cảm ơn bạn đã theo dõi bài viết! 
+                <i class="em em-kissing_smiling_eyes" aria-role="presentation" aria-label="KISSING FACE WITH SMILING EYES"></i>
+            </p>
+        </article>
+    </main>
+    <footer>
+        <a href="/">/aatpn.github.io</a> &nbsp;
+        <a href="/tags">/tags</a> &nbsp;
+        <a href="/about">/about</a> &nbsp;
+        <a href="https://github.com/aatpn" target="_blank">/github</a> &nbsp;
+        <a href="https://www.facebook.com/namdanguyen26">/fb</a>
+    </footer>
+</body>
+</html>

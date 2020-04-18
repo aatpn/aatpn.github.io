@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Athiti&family=Space+Mono&display=swap" rel="stylesheet">
+    <link href="https://emoji-css.afeld.me/emoji.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/style.css"> 
+    <link rel="shortcut icon" href="/favicon.ico">
+
+    <!-- script -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <title>Settimout0 in JS</title>
+</head>
+<body>
+    <header>
+        <p class="username">
+            <a href="/" class="btn btn-xs" role="button">Dan Nguyen</a>
+        </p> 
+    </header>
+    <main>
+        <article>
+            <header>
+                <h1>SetTimeout(fn, 0) in Javascript</h1>
+                <span class="date">22 Jan 2020</span> 
+                <hr>
+            </header>
+            <p>
+                Với những người làm việc với javascript thì không lạ với khái niệm asynchronous
+                và đi theo nó là kỹ thuật setTimeout() để xử lý việc chạy bất đồng bộ. Bài viết này mình sẽ 
+                nói tới một thứ mà hay được sử dụng, đó là <code>setTimeout 0</code>. Cùng đi xem ví
+                dụ dưới đây: 
+            </p>    
+            <pre><span class="p">[1,2,3,4,5]</span>.<span class="g">forEach</span>((<span class="r">item</span>) => {
+        <span class="b">setTimeout</span>(() <span class="r">=></span> {
+            <span class="b">for</span> (let i <span class="r">=</span> 0; i <span class="r">&lt;</span> 10; i<span class="r">++</span>) {
+                <span class="b">console</span>.<span class="g">log</span>(<span class="o">i</span>);
+            }
+        }, <span class="o">0</span>)
+    });     </pre>
+            <p>
+                Đây là cái thứ mà không ít người nhầm lẫn, đa số sẽ hiểu theo cách là
+                khi gọi <code>setTimeout 0</code> thì nó sẽ execute ngay lúc đó và chạy tiếp chương trình. Bản chất
+                thì không phải vậy. Để hiểu rõ, bạn cần phải biết 1 thứ cũng khá quen mặt với dân
+                javascript là Event Loop. Bài viết này mình sẽ không giải thích thằng này là 
+                gì và hoạt động ra sao. Các bạn có thể đọc về <a href="http://latentflip.com/loupe/" target="_blank">Event Loop</a>.
+            </p>
+            <div>
+                <img src="https://miro.medium.com/max/734/1*d9krn8aMBY4xo1kum9u9tg.png">
+                <p style="text-align: center; font-size: 14px;" class="date">Event Loop hoạt động như thế nào ?</p>
+            </div>
+            <p>
+                Nói đơn giản, cái thời gian mà chuyền vào <code>setTimeout()</code> sẽ không phải là cứ sau khoảng
+                thời gian đó thì nó sẽ thực thi mà khi đó còn tuỳ thuộc vào cái Call Stack có trống hay 
+                không <code>(null)</code>. Khi gọi <code>setTimeout()</code> thì tại thời điểm nó sẽ được đưa vào trong Web Apis
+                và chạy bất đồng bộ. 
+            </p>
+            <p>
+                Với việc thời gian <code>setTimeout = 0</code> mà nhiều người nghĩ là khi cầm ra thì ngay lúc đó nó sẽ
+                được đưa quay trở lại chương trình và thực thi. Nhưng không phải vậy, khi thằng <code>setTimeout()</code>
+                đi vào Web Apis và do <code>timer() = 0</code> thì ngay lúc đó nó sẽ được đưa sang 1 cái thằng Callback Queue.
+            </p>
+            <p>
+                Và khi Call Stack nhận giá trị null, cái thằng Event Loop khi đấy nó sẽ vào cuộc và gắp từng thứ
+                một có trong Callback Queue đưa lại lên Call Stack và thực thi. Chương trình kết thúc khi 2 cái
+                thằng này trống. 
+            </p>
+            <p>
+                Như vậy, ví dụ trên nó vẫn sẽ chạy các hàm phía dưới trước, ở đây là <code>console.log(item);</code> thực thi
+                xong thì Call Stack trống, <code>setTimeout()</code> được đẩy lên và chạy vòng for bên trong. 
+                Kết quả của chương trình:
+            </p>
+            <pre>  
+        1
+        2
+        3
+        4
+        5
+        0
+        .
+        . 
+        10
+        0
+        . 
+        . 
+        10
+        0
+        . 
+        . 
+        .
+            </pre>
+            <p>
+                <h2>References: </h2>
+                <span class="ref">http://latentflip.com/loupe</span>
+            </p>
+            <p>
+                <h2>Tags: </h2> &nbsp;
+                <span><a href="/tags/javascript/">#javascript</a> </span> &nbsp;
+                <span><a href="/tags/nodejs">#nodejs</a> </span>
+            </p>
+            <p>
+                Cảm ơn bạn đã theo dõi bài viết! 
+                <i class="em em-kissing_smiling_eyes" aria-role="presentation" aria-label="KISSING FACE WITH SMILING EYES"></i>
+            </p>
+        </article>
+    </main>
+    <footer> 
+        <a href="/">/aatpn.github.io</a> &nbsp;
+        <a href="/tags">/tags</a> &nbsp;
+        <a href="/about">/about</a> &nbsp;
+        <a href="https://github.com/aatpn" target="_blank">/github</a> &nbsp;
+        <a href="https://www.facebook.com/namdanguyen26">/fb</a>
+    </footer>
+</body>
+</html>
