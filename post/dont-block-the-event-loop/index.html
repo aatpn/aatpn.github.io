@@ -43,8 +43,6 @@
                 và chạy 100tr lần vòng <code>for</code>. Giả sử vẫn còn các hàm
                 phía sau thì tụi nó phải đợi vòng <code>for</code> chạy hết, khi này
                 chương trình sẽ bị block và browser đứng hình ngay khi scroll.
-            </p>
-            <p>
                 Cũng với ví dụ trên, nhưng ta sử dụng thêm <code>setTimeout()</code>:
             </p>
             <pre><span class="b">window</span>.<span class="g">onscroll</span> <span class="r">=</span> <span class="g">function</span>() {
@@ -58,9 +56,7 @@
             <p>
                 Cũng vẫn là trên browser, khi ta scroll liên tục, browser sẽ không đứng hình ngay
                 mà vẫn bình thường. Nhưng khi dừng scroll, câu chuyện lại trở về ví dụ ở trên, trình duyệt lại toang.
-            </p>
-            <p>
-            Dễ hiểu, trạng thái ban đầu, Call Stack đang trống.
+                Dễ hiểu, trạng thái ban đầu, Call Stack đang trống.
             </p>
             <img src="/images/dont-block-the-event-loop/Screen Shot 2020-04-02 at 3.18.03 PM.png" alt="">
             <p>
